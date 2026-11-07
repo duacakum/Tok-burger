@@ -237,6 +237,10 @@ function onScr(){if(ticking)return;ticking=true;requestAnimationFrame(function()
 $("#scr").addEventListener("scroll",onScr,{passive:true});addEventListener("scroll",onScr,{passive:true});
 var sc=$("#scr"),tgt=0,cu=0,anim=0;
 function stopScroll(){cancelAnimationFrame(anim);anim=0}
+var ORDER_ENDPOINT='https://tokburger-orders.duac-akum.workers.dev';
+function sendOrder(num){if(!ORDER_ENDPOINT)return;var items=[];for(var k in cart){var it=find(k);items.push({name:it.n,qty:cart[k],price:it.p})}
+ var body={number:num,point:cur.n,address:cur.a,mode:mode=='d'?'Доставка':'С собой',name:($('#fn').value+' '+$('#ln').value).trim(),phone:'+7 '+$('#tel').value.trim(),email:$('#em').value.trim(),deliveryAddress:$('#addr').value.trim(),items:items,total:total()+(mode=='d'?FEE:0)};
+ try{fetch(ORDER_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).catch(function(){})}catch(e){}}
 function step(){cu+=(tgt-cu)*.07;if(Math.abs(tgt-cu)<.5){cu=tgt;sc.scrollTop=cu;anim=0;return}sc.scrollTop=cu;anim=requestAnimationFrame(step)}
 sc.addEventListener("wheel",function(e){if(e.ctrlKey||e.target.closest(".map"))return;e.preventDefault();if(!anim){cu=sc.scrollTop;tgt=cu}tgt=Math.max(0,Math.min(sc.scrollHeight-sc.clientHeight,tgt+e.deltaY*.5));if(!anim)anim=requestAnimationFrame(step)},{passive:false});
 $("#back2").onclick=function(){show("s2")};
@@ -275,7 +279,8 @@ function startTrack(){
  TK.st=STEPS.map(function(s){return Object.assign({},s)});
  if(mode=='p'){TK.st[3]={n:'Готов к выдаче',s:'Выдача',d:'Заказ ждёт вас на кассе.'};TK.st[4]={n:'Выдан',s:'Готово',d:'Приятного аппетита!'}}
  TK.eta=mode=='d'?40:15;TK.i=0;TK.t0=performance.now();TK.sel=null;
- $('#tsub').textContent='Заказ № '+(1000+Math.floor(Math.random()*9000))+' · '+cur.n+' · '+fmt(total()+(mode=='d'?FEE:0));
+ var num=1000+Math.floor(Math.random()*9000);sendOrder(num);
+ $('#tsub').textContent='Заказ № '+num+' · '+cur.n+' · '+fmt(total()+(mode=='d'?FEE:0));
  cart={};upd();drawStage();paint();show('s5');cancelAnimationFrame(TK.raf);TK.raf=requestAnimationFrame(loop)}
 function drawStage(){var W=36,H=12,pts=PL.map(pr),xs=pts.map(function(p){return p[0]}),ys=pts.map(function(p){return p[1]});
  TK.pts=pts;var x0=Math.min.apply(0,xs)-W-16,x1=Math.max.apply(0,xs)+W+16,y0=Math.min.apply(0,ys)-W/2-40,y1=Math.max.apply(0,ys)+W/2+H+16;
